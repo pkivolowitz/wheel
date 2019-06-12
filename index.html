@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+	<head>
+	</head>
+	<body style="margin: 0; background-color: black;">
+		<canvas id = "textcanvas" style="border-style: solid; margin: 0; padding: 0; display: block; position: absolute; left: 0px; top: 0px; z-index: 10;"></canvas>
+		<canvas id = "glcanvas" style="border-style: solid; margin: 0; padding: 0; display: block; position: absolute; left: 0px; top: 0px; z-index: 0;">Support for the canvas element is required.</canvas>
+		
+		<script src='gl-matrix-min.js'></script>
+		<script src='shaders.js'></script>
+		<script src='box.js'></script>
+
+		<script id="vertex_shader" type="x-shader/x-vertex">
+			uniform mat4 modelview_matrix;
+			uniform mat4 projection_matrix;
+			attribute vec3 vertex_coordinates;
+
+			void main(void)
+			{ 
+				gl_Position = projection_matrix * modelview_matrix * vec4(vertex_coordinates, 1.0);
+			}
+		</script>
+		<script id="fragment_shader" type="x-shader/x-fragment">
+			precision mediump float;
+
+			void main(void)
+			{
+				gl_FragColor = vec4(1, 1, 1, 1);
+			}
+		</script>
+
+		<!-- CODE -->
+
+		<script>
+
+		function Radians(angle_in_degrees) 
+		{
+			return angle_in_degrees * (Math.PI / 180);
+		}
+
+		function ProjectText(P, mvp, ctx, text)
+		{
+			var p = vec4.clone(P);
+			vec4.transformMat4(p, p, mvp);
+			p[0] /= p[3];
+			p[1] /= p[3];
+			var c = vec2.fromValues((p[0] * 0.5 + 0.5) * gl.canvas.width, (p[1] * -0.5 + 0.5) * gl.canvas.height);
+			ctx.fillText(text, c[0], c[1]);
+		}
+
+		function DrawScene(now)
+		{
+			var projection_matrix = mat4.create();
+			var modelview_matrix = mat4.create();
+			var mvp = mat4.create();
+			var p = vec4.create();
+			var c = vec2.create();
+
+			now = now / 1000;
+			ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+			gl.clearColor(0.1, 0.1, 0.1, 1.0);
+			gl.clear(gl.COLOR_BUFFER_BIT);
+			gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+			mat4.lookAt(modelview_matrix, vec3.fromValues(0.0, 0.0, 10.0), vec3.fromValues(0.0, 0.0, 0.0), y_axis);
+			mat4.perspective(projection_matrix, Radians(30.0), canvas.clientWidth / canvas.clientHeight, near_plane, far_plane);
+			mat4.translate(modelview_matrix, modelview_matrix, vec3.fromValues(0, 0.0, 4 * Math.sin(Radians(now * 30))));
+			mat4.rotate(modelview_matrix, modelview_matrix, Radians(now * 180), vec3.fromValues(1.0, 1.0, 1.0));		
+			mat4.multiply(mvp, projection_matrix, modelview_matrix);
+			ProjectText(vec4.fromValues(-1, -1, 0, 1), mvp, ctx, "(-1,-1)");
+			ProjectText(vec4.fromValues(1, 1, 0, 1), mvp, ctx, "(1,1)");
+			
+			box.Draw(modelview_matrix, projection_matrix);
+			requestAnimationFrame(DrawScene);
+		}
+
+		var x_axis = vec3.fromValues(1, 0, 0);
+		var y_axis = vec3.fromValues(0, 1, 0);
+		var z_axis = vec3.fromValues(0, 0, 1);
+		var near_plane = 1;
+		var far_plane = 100;
+
+		var canvas = document.getElementById('glcanvas');
+		var textCanvas = document.getElementById("textcanvas");
+		var gl = canvas.getContext('webgl');
+		var ctx = textCanvas.getContext("2d");
+		var box = new Box();
+		box.Initialize();
+		canvas.width = textCanvas.width = window.innerWidth - 10;
+		canvas.height = textCanvas.height = window.innerHeight - 10;
+
+		ctx.font = "32px Helvetica";
+		ctx.textAlign = "left";
+		ctx.textBaseline = "bottom";
+		ctx.fillStyle = "#ffffff";
+
+		requestAnimationFrame(DrawScene);
+
+		</script>
+	</body>
+</html>
