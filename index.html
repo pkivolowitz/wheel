@@ -91,9 +91,8 @@
 			now = now % 6;
 			now = now / 6;
 			if (now < 0.05) 
-				winning_rotation = Math.random() * Math.PI * 2.0 + Math.floor(Math.random() * 6 * Math.PI) + 2 * Math.PI;
-
-
+				winning_rotation = Math.random() * 4 * Math.PI * 2.0 + 
+					4 * Math.PI; // at least one turn
 
 			wr = EaseInOut(now) * winning_rotation;
 			
@@ -102,20 +101,19 @@
 			gl.clear(gl.COLOR_BUFFER_BIT);
 			gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
 
+			var a = (aspect > 1) ? 1 : aspect;
 			mat4.lookAt(modelview_matrix, vec3.fromValues(0.0, 0.0, 5.0), vec3.fromValues(0.0, 0.0, 0.0), y_axis);
-			mat4.perspective(projection_matrix, Radians(30.0), canvas.clientWidth / canvas.clientHeight, near_plane, far_plane);
-			mat4.rotate(modelview_matrix, modelview_matrix, wr, vec3.fromValues(0.0, 0.0, 1.0));		
-//			ProjectText(vec4.fromValues(-1, -1, 0, 1), mvp, ctx, "(-1,-1)");
-//			ProjectText(vec4.fromValues(1, 1, 0, 1), mvp, ctx, "(1,1)");
+			mat4.perspective(projection_matrix, Radians(30.0) / a, aspect, near_plane, far_plane);
+			mat4.rotate(modelview_matrix, modelview_matrix, wr, z_axis);		
 			
 			var m = mat4.create();
 			var r = 0;
 			var step = Radians(360) / wedge_count;
 			for (counter = 0; counter < wedge_count; counter++) {
 				var solid_color = (counter % 2) ? vec4.fromValues(1, 0, 0, 1) : vec4.fromValues(0.8, 0, 0, 1);
-				mat4.rotate(modelview_matrix, modelview_matrix, step,  vec3.fromValues(0.0, 0.0, 1.0));
+				mat4.rotate(modelview_matrix, modelview_matrix, step,  z_axis);
 				wedge.Draw(modelview_matrix, projection_matrix, solid_color);
-				mat4.rotate(m, modelview_matrix, -step / 2.0, vec3.fromValues(0, 0, 1.0));
+				mat4.rotate(m, modelview_matrix, -step / 2.0, z_axis);
 				mat4.multiply(mvp, projection_matrix, m);
 				ProjectText(vec4.fromValues(0.9, 0, 0, 1), mvp, ctx, counter.toString(), -wr - r);
 				r = r + step;
@@ -123,7 +121,6 @@
 			requestAnimationFrame(DrawScene);
 		}
 
-		var x_axis = vec3.fromValues(1, 0, 0);
 		var y_axis = vec3.fromValues(0, 1, 0);
 		var z_axis = vec3.fromValues(0, 0, 1);
 		var near_plane = 1;
@@ -140,8 +137,10 @@
 		wedge.Initialize(wedge_count, steps);
 		canvas.width = textCanvas.width = window.innerWidth;
 		canvas.height = textCanvas.height = window.innerHeight;
+		var aspect = canvas.clientWidth / canvas.clientHeight;
 
-		ctx.font = "24px Helvetica";
+		var a = (aspect > 1) ? 1 : aspect;
+		ctx.font = (32 * a).toString() + "px Helvetica";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.fillStyle = "#ffffff";
