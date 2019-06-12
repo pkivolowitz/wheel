@@ -30,7 +30,7 @@ class Box
 
 	InitializeShader()
 	{
-		this.p_shader = CreateShader("vertex_shader", "fragment_shader");
+		this.p_shader = CreateShader("line-vertex_shader", "line-fragment_shader");
 		gl.useProgram(this.p_shader);
 		this.p_coordinates = gl.getAttribLocation(this.p_shader, "vertex_coordinates");
 		this.p_modelview_matrix_handle = gl.getUniformLocation(this.p_shader, "modelview_matrix");
